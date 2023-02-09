@@ -45,14 +45,14 @@ class SecretCommand extends \think\console\Command
         $res = copy( __DIR__.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..'
             .DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR
             .'config.php',$configFilePath );
-        if (\think\App::VERSION >= '6.0.0') {
-            $config = file_get_contents( $configFilePath );
-            $config = str_replace( 'Tp5','Tp6',$config );
-            file_put_contents( $configFilePath,$config );
-        }
         if (\think\App::VERSION >= '8.0.0') {
             $config = file_get_contents( $configFilePath );
             $config = str_replace( 'Tp5','Tp8',$config );
+            file_put_contents( $configFilePath,$config );
+        }
+        if (\think\App::VERSION >= '6.0.0') {
+            $config = file_get_contents( $configFilePath );
+            $config = str_replace( 'Tp5','Tp6',$config );
             file_put_contents( $configFilePath,$config );
         }
         if ($res) {
