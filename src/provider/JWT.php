@@ -21,55 +21,55 @@ class JWT
     {
         $this->request = $request;
         $config        = require __DIR__.'/../../config/config.php';
-        if (strpos(App::VERSION, '6') !== false) {
-            $this->config = array_merge($config, Config::get('jwt') ?? []);
+        if (App::VERSION >= '6.0.0') {
+            $this->config = array_merge( $config,Config::get( 'jwt' ) ?? [] );
         } else {
-            $this->config = array_merge($config, Config::get('jwt.') ?? []);
+            $this->config = array_merge( $config,Config::get( 'jwt.' ) ?? [] );
         }
     }
 
     protected function registerBlacklist()
     {
-        Container::getInstance()->make('thans\jwt\Blacklist', [
+        Container::getInstance()->make( 'thans\jwt\Blacklist',[
             new $this->config['blacklist_storage'],
-        ])->setRefreshTTL($this->config['refresh_ttl'])->setGracePeriod($this->config['blacklist_grace_period']);
+        ] )->setRefreshTTL( $this->config['refresh_ttl'] )->setGracePeriod( $this->config['blacklist_grace_period'] );
     }
 
 
     protected function registerProvider()
     {
-        Container::getInstance()->make('thans\jwt\provider\JWT\Lcobucci', [
+        Container::getInstance()->make( 'thans\jwt\provider\JWT\Lcobucci',[
             $this->config['secret'],
             $this->config['algo'],
             $this->config['keys'],
-        ]);
+        ] );
     }
 
     protected function registerFactory()
     {
-        Container::getInstance()->make('thans\jwt\claim\Factory', [
+        Container::getInstance()->make( 'thans\jwt\claim\Factory',[
             new Request(),
             $this->config['ttl'],
             $this->config['refresh_ttl'],
-        ]);
+        ] );
     }
 
     protected function registerPayload()
     {
-        Container::getInstance()->make('thans\jwt\Payload', [
-            Container::getInstance()->make('thans\jwt\claim\Factory')
-                ->setRequiredClaims($this->config['required_claims'])
-                ->setLeeway($this->config['leeway']),
-        ]);
+        Container::getInstance()->make( 'thans\jwt\Payload',[
+            Container::getInstance()->make( 'thans\jwt\claim\Factory' )
+                ->setRequiredClaims( $this->config['required_claims'] )
+                ->setLeeway( $this->config['leeway'] ),
+        ] );
     }
 
     protected function registerManager()
     {
-        Container::getInstance()->make('thans\jwt\Manager', [
-            Container::getInstance()->make('thans\jwt\Blacklist'),
-            Container::getInstance()->make('thans\jwt\Payload'),
-            Container::getInstance()->make('thans\jwt\provider\JWT\Lcobucci'),
-        ]);
+        Container::getInstance()->make( 'thans\jwt\Manager',[
+            Container::getInstance()->make( 'thans\jwt\Blacklist' ),
+            Container::getInstance()->make( 'thans\jwt\Payload' ),
+            Container::getInstance()->make( 'thans\jwt\provider\JWT\Lcobucci' ),
+        ] );
     }
 
     protected function registerJWTAuth()
@@ -80,16 +80,16 @@ class JWT
             'param'  => new Param()
         ];
 
-        $mode = $this->config['token_mode'];
+        $mode     = $this->config['token_mode'];
         $setChain = [];
 
-        foreach ($mode as $key => $chain) {
-            if (isset($chains[$chain])) {
+        foreach ( $mode as $key => $chain ) {
+            if (isset( $chains[$chain] )) {
                 $setChain[$key] = $chains[$chain];
             }
         }
 
-        JWTAuth::parser()->setRequest($this->request)->setChain($setChain);
+        JWTAuth::parser()->setRequest( $this->request )->setChain( $setChain );
     }
 
     public function init()
