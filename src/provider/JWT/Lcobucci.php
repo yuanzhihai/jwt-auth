@@ -39,13 +39,13 @@ class Lcobucci extends Provider
         'ES512' => ES512::class,
     ];
 
-    protected Signer $signer;
+    /** @var \Lcobucci\JWT\Signer The signer chosen based on the aglo. */
+    protected $signer;
 
-    protected Builder $builder;
+    protected $builder;
 
-    public function __construct(protected $secret,$algo,array $keys,protected Configuration $config)
+    public function __construct(protected $secret,protected $algo,array $keys,protected $config = null)
     {
-        $this->algo   = $algo;
         $this->keys   = $keys;
         $this->signer = $this->getSigner();
         if ($this->isAsymmetric()) {
