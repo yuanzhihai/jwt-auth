@@ -6,7 +6,7 @@ namespace thans\jwt\provider\storage;
 use thans\jwt\contract\Storage;
 use think\facade\Cache;
 
-class Tp8 implements Storage
+class Thinkphp implements Storage
 {
     public function delete($key)
     {
