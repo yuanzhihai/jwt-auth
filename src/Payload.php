@@ -14,8 +14,6 @@ use thans\jwt\claim\Subject;
 
 class Payload
 {
-    protected $factory;
-
     protected $classMap = [
             'aud' => Audience::class,
             'exp' => Expiration::class,
@@ -28,9 +26,8 @@ class Payload
 
     protected $claims;
 
-    public function __construct(Factory $factory)
+    public function __construct(protected Factory $factory)
     {
-        $this->factory = $factory;
     }
 
     public function customer(array $claim = [])

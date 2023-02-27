@@ -8,7 +8,7 @@ class JWTAuth extends JWT
     /**
      * Token验证，返回payload
      *
-     * @param  boolean $validate 是否验证黑名单
+     * @param boolean $validate 是否验证黑名单
      * @return array
      * @throws exception\JWTException
      * @throws exception\TokenBlacklistException
@@ -16,20 +16,20 @@ class JWTAuth extends JWT
      */
     public function auth($validate = true)
     {
-        $this->manager->setValidate($validate);
+        $this->manager->setValidate( $validate );
         return (array)$this->getPayload();
     }
 
     /**
      * Token构建
      *
-     * @param  array  $user
+     * @param array $user
      *
      * @return mixed
      */
     public function builder(array $user = [])
     {
-        return $this->createToken($user);
+        return $this->createToken( $user );
     }
 
     /**
@@ -53,10 +53,10 @@ class JWTAuth extends JWT
     public function invalidate($token)
     {
         if ($token instanceof Token) {
-            return $this->manager->invalidate($token);
+            return $this->manager->invalidate( $token );
         }
 
-        return $this->manager->invalidate(new Token($token));
+        return $this->manager->invalidate( new Token( $token ) );
     }
 
     /**
@@ -69,9 +69,9 @@ class JWTAuth extends JWT
     public function validate($token)
     {
         if ($token instanceof Token) {
-            return $this->manager->validate($this->manager->provider->decode($token->get()));
+            return $this->manager->validate( $this->manager->provider->decode( $token->get() ) );
         }
 
-        return $this->manager->validate($this->manager->provider->decode($token));
+        return $this->manager->validate( $this->manager->provider->decode( $token ) );
     }
 }

@@ -5,6 +5,7 @@ namespace thans\jwt\provider\JWT;
 use Exception;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer;
 use Lcobucci\JWT\Signer\Ecdsa;
 use Lcobucci\JWT\Signer\Ecdsa\Sha256 as ES256;
 use Lcobucci\JWT\Signer\Ecdsa\Sha384 as ES384;
@@ -37,36 +38,24 @@ class Lcobucci extends Provider
         'ES384' => ES384::class,
         'ES512' => ES512::class,
     ];
-    /**
-     * The Configuration instance.
-     *
-     * @var Configuration
-     */
-    protected $config;
 
+    protected Signer $signer;
 
-    /** @var \Lcobucci\JWT\Signer The signer chosen based on the aglo. */
-    protected $signer;
+    protected Builder $builder;
 
-    /** @var Builder */
-    protected $builder;
-
-    public function __construct($secret, $algo, array $keys, $config = null)
+    public function __construct(protected $secret,$algo,array $keys,protected Configuration $config)
     {
-        $this->secret = $secret;
         $this->algo   = $algo;
         $this->keys   = $keys;
         $this->signer = $this->getSigner();
-        if (!is_null($config)) {
-            $this->config = $config;
-        } elseif ($this->isAsymmetric()) {
-            $this->config = Configuration::forAsymmetricSigner($this->signer, $this->getSigningKey(), $this->getVerificationKey());
+        if ($this->isAsymmetric()) {
+            $this->config = Configuration::forAsymmetricSigner( $this->signer,$this->getSigningKey(),$this->getVerificationKey() );
         } else {
-            $this->config = Configuration::forSymmetricSigner($this->signer, InMemory::plainText($this->getSecret()));
+            $this->config = Configuration::forSymmetricSigner( $this->signer,InMemory::plainText( $this->getSecret() ) );
         }
-        if (!count($this->config->validationConstraints())) {
+        if (!count( $this->config->validationConstraints() )) {
             $this->config->setValidationConstraints(
-                new SignedWith($this->signer, $this->getVerificationKey()),
+                new SignedWith( $this->signer,$this->getVerificationKey() ),
             );
         }
     }
@@ -91,11 +80,11 @@ class Lcobucci extends Provider
      */
     public function encode(array $payload)
     {
-        $this->builder = $this->getBuilderFromClaims($payload);
+        $this->builder = $this->getBuilderFromClaims( $payload );
         try {
-            return $this->builder->getToken($this->config->signer(), $this->config->signingKey())->toString();
-        } catch (Exception $e) {
-            throw new JWTException('Could not create token: ' . $e->getMessage(), $e->getCode(), $e);
+            return $this->builder->getToken( $this->config->signer(),$this->config->signingKey() )->toString();
+        } catch ( Exception $e ) {
+            throw new JWTException( 'Could not create token: '.$e->getMessage(),$e->getCode(),$e );
         }
     }
 
@@ -108,32 +97,17 @@ class Lcobucci extends Provider
     protected function getBuilderFromClaims(array $payload): Builder
     {
         $builder = $this->config->builder();
-        foreach ($payload as $key => $value) {
-            switch ($key) {
-                case RegisteredClaims::ID:
-                    $builder->identifiedBy($value);
-                    break;
-                case RegisteredClaims::EXPIRATION_TIME:
-                    $builder->expiresAt(\DateTimeImmutable::createFromFormat('U', $value));
-                    break;
-                case RegisteredClaims::NOT_BEFORE:
-                    $builder->canOnlyBeUsedAfter(\DateTimeImmutable::createFromFormat('U', $value));
-                    break;
-                case RegisteredClaims::ISSUED_AT:
-                    $builder->issuedAt(\DateTimeImmutable::createFromFormat('U', $value));
-                    break;
-                case RegisteredClaims::ISSUER:
-                    $builder->issuedBy($value);
-                    break;
-                case RegisteredClaims::AUDIENCE:
-                    $builder->permittedFor($value);
-                    break;
-                case RegisteredClaims::SUBJECT:
-                    $builder->relatedTo($value);
-                    break;
-                default:
-                    $builder->withClaim($key, $value);
-            }
+        foreach ( $payload as $key => $value ) {
+            $builder = match ( $key ) {
+                RegisteredClaims::ID => $builder->identifiedBy( $value ),
+                RegisteredClaims::EXPIRATION_TIME => $builder->expiresAt( \DateTimeImmutable::createFromFormat( 'U',$value ) ),
+                RegisteredClaims::NOT_BEFORE => $builder->canOnlyBeUsedAfter( \DateTimeImmutable::createFromFormat( 'U',$value ) ),
+                RegisteredClaims::ISSUED_AT => $builder->issuedAt( \DateTimeImmutable::createFromFormat( 'U',$value ) ),
+                RegisteredClaims::ISSUER => $builder->issuedBy( $value ),
+                RegisteredClaims::AUDIENCE => $builder->permittedFor( $value ),
+                RegisteredClaims::SUBJECT => $builder->relatedTo( $value ),
+                default => $builder->withClaim( $key,$value ),
+            };
         }
         return $builder;
     }
@@ -149,24 +123,24 @@ class Lcobucci extends Provider
     {
         try {
             /** @var \Lcobucci\JWT\Token\Plain */
-            $token = $this->config->parser()->parse($token);
-        } catch (Exception $e) {
-            throw new TokenInvalidException('Could not decode token: ' . $e->getMessage(), $e->getCode(), $e);
+            $token = $this->config->parser()->parse( $token );
+        } catch ( Exception $e ) {
+            throw new TokenInvalidException( 'Could not decode token: '.$e->getMessage(),$e->getCode(),$e );
         }
 
-        if (!$this->config->validator()->validate($token, ...$this->config->validationConstraints())) {
-            throw new TokenInvalidException('Token Signature could not be verified.');
+        if (!$this->config->validator()->validate( $token,...$this->config->validationConstraints() )) {
+            throw new TokenInvalidException( 'Token Signature could not be verified.' );
         }
-        return (new Collection($token->claims()->all()))
-            ->map(function ($claim) {
-                if (is_a($claim, \DateTimeImmutable::class)) {
+        return ( new Collection( $token->claims()->all() ) )
+            ->map( function ($claim) {
+                if (is_a( $claim,\DateTimeImmutable::class )) {
                     return $claim->getTimestamp();
                 }
-                return is_object($claim) && method_exists($claim, 'getValue')
+                return is_object( $claim ) && method_exists( $claim,'getValue' )
                     ? $claim->getValue()
                     : $claim;
-            })
-         ->toArray();
+            } )
+            ->toArray();
     }
 
     /**
@@ -176,8 +150,8 @@ class Lcobucci extends Provider
      */
     protected function getSigner()
     {
-        if (!array_key_exists($this->algo, $this->signers)) {
-            throw new JWTException('The given algorithm could not be found');
+        if (!array_key_exists( $this->algo,$this->signers )) {
+            throw new JWTException( 'The given algorithm could not be found' );
         }
 
         return new $this->signers[$this->algo];
@@ -186,30 +160,30 @@ class Lcobucci extends Provider
 
     protected function isAsymmetric()
     {
-        $reflect = new ReflectionClass($this->signer);
+        $reflect = new ReflectionClass( $this->signer );
 
-        return $reflect->isSubclassOf(Rsa::class) || $reflect->isSubclassOf(Ecdsa::class);
+        return $reflect->isSubclassOf( Rsa::class ) || $reflect->isSubclassOf( Ecdsa::class );
     }
 
     protected function getSigningKey()
     {
         return $this->isAsymmetric() ?
-            InMemory::plainText($this->getPrivateKey(), $this->getPassphrase() ?? '') :
-            InMemory::plainText($this->getSecret());
+            InMemory::plainText( $this->getPrivateKey(),$this->getPassphrase() ?? '' ) :
+            InMemory::plainText( $this->getSecret() );
     }
 
     protected function getVerificationKey()
     {
         return $this->isAsymmetric() ?
-            InMemory::plainText($this->getPublicKey()) :
-            InMemory::plainText($this->getSecret());
+            InMemory::plainText( $this->getPublicKey() ) :
+            InMemory::plainText( $this->getSecret() );
     }
 
 
     protected function getSign()
     {
-        if (!isset($this->signers[$this->algo])) {
-            throw new JWTException('Cloud not find ' . $this->algo . ' algo');
+        if (!isset( $this->signers[$this->algo] )) {
+            throw new JWTException( 'Cloud not find '.$this->algo.' algo' );
         }
         return new $this->signers[$this->algo];
     }

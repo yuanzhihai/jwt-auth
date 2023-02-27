@@ -37,55 +37,51 @@ class Factory
      * @var int
      */
     protected $leeway = 0;
-    protected $ttl;
     protected $claim = [];
-    protected $refreshTtl = 20160;
 
-    public function __construct(Request $request, $ttl, $refreshTtl)
+
+    public function __construct(protected Request $request,protected $ttl,protected $refreshTtl = 20160)
     {
-        $this->request    = $request;
-        $this->ttl        = $ttl;
-        $this->refreshTtl = $refreshTtl;
     }
 
-    public function customer($key, $value)
+    public function customer($key,$value)
     {
-        if ($this->has($key)) {
-            $this->claim[$key] = new $this->classMap[$key]($value);
-            return method_exists($this->claim[$key], 'setLeeway') ?
-                $this->claim[$key]->setLeeway($this->leeway) :
+        if ($this->has( $key )) {
+            $this->claim[$key] = new $this->classMap[$key]( $value );
+            return method_exists( $this->claim[$key],'setLeeway' ) ?
+                $this->claim[$key]->setLeeway( $this->leeway ) :
                 $this->claim[$key];
         }
-        $this->claim[$key] = new Customer($key, $value);
+        $this->claim[$key] = new Customer( $key,$value );
         return $this;
     }
 
     public function has($name)
     {
-        return array_key_exists($name, $this->classMap);
+        return array_key_exists( $name,$this->classMap );
     }
 
 
     public function builder()
     {
-        foreach ($this->classMap as $key => $class) {
-            if (in_array($key, $this->requiredClaims)) {
-                $claim[$key] = new $class(method_exists($this, $key)
-                    ? $this->$key() : '');
+        foreach ( $this->classMap as $key => $class ) {
+            if (in_array( $key,$this->requiredClaims )) {
+                $claim[$key] = new $class( method_exists( $this,$key )
+                    ? $this->$key() : '' );
             }
         }
-        $this->claim = array_merge($this->claim, $claim);
+        $this->claim = array_merge( $this->claim,$claim );
         return $this;
     }
 
     public function validate($refresh = false)
     {
-        foreach ($this->claim as $key => $claim) {
-            if (!$refresh && method_exists($claim, 'validatePayload')) {
+        foreach ( $this->claim as  $claim ) {
+            if (!$refresh && method_exists( $claim,'validatePayload' )) {
                 $claim->validatePayload();
             }
-            if ($refresh && method_exists($claim, 'validateRefresh')) {
-                $claim->validateRefresh($this->refreshTtl);
+            if ($refresh && method_exists( $claim,'validateRefresh' )) {
+                $claim->validateRefresh( $this->refreshTtl );
             }
         }
     }
@@ -114,7 +110,7 @@ class Factory
 
     public function exp()
     {
-        return Utils::now()->addSeconds($this->ttl)->getTimestamp();
+        return Utils::now()->addSeconds( $this->ttl )->getTimestamp();
     }
 
     public function iat()
@@ -129,7 +125,7 @@ class Factory
 
     public function jti()
     {
-        return md5(uniqid() . time() . rand(100000, 9999999));
+        return md5( uniqid().time().rand( 100000,9999999 ) );
     }
 
     public function nbf()

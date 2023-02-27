@@ -7,14 +7,9 @@ use think\Request;
 
 class Parser
 {
-    protected $request;
 
-    private $chain;
-
-    public function __construct(Request $request, $chain = [])
+    public function __construct(protected Request $request,private $chain = [])
     {
-        $this->request = $request;
-        $this->chain   = $chain;
     }
 
     public function setRequest(Request $request)

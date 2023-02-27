@@ -6,32 +6,30 @@ use thans\jwt\contract\Storage;
 
 class Blacklist
 {
-    protected $storage;
     protected $refreshTTL = 20160;
     protected $gracePeriod = 0;
 
-    public function __construct(Storage $storage)
+    public function __construct(protected Storage $storage)
     {
-        $this->storage = $storage;
     }
 
     public function add($payload)
     {
-        $this->set($this->getKey($payload), $this->getGraceTimestamp(), $this->getSecondsUntilExpired($payload));
+        $this->set( $this->getKey( $payload ),$this->getGraceTimestamp(),$this->getSecondsUntilExpired( $payload ) );
 
         return $this;
     }
 
     public function has($payload)
     {
-        return $this->get($this->getKey($payload)) ? true : false;
+        return $this->get( $this->getKey( $payload ) ) ? true : false;
     }
 
     public function hasGracePeriod($payload)
     {
-        $val = $this->get($this->getKey($payload));
+        $val = $this->get( $this->getKey( $payload ) );
 
-        return  $val && $val >= time();
+        return $val && $val >= time();
     }
 
     protected function getKey($payload)
@@ -39,21 +37,21 @@ class Blacklist
         return $payload['jti'];
     }
 
-    public function set($key, $val, $time = 0)
+    public function set($key,$val,$time = 0)
     {
-        $this->storage->set($key, $val, $time);
+        $this->storage->set( $key,$val,$time );
 
         return $this;
     }
 
     public function get($key)
     {
-        return $this->storage->get($key);
+        return $this->storage->get( $key );
     }
 
     public function remove($key)
     {
-        return $this->storage->delete($key);
+        return $this->storage->delete( $key );
     }
 
     public function getRefreshTTL()
@@ -63,7 +61,7 @@ class Blacklist
 
     public function setRefreshTTL($ttl)
     {
-        $this->refreshTTL = (int) $ttl;
+        $this->refreshTTL = (int)$ttl;
 
         return $this;
     }
@@ -75,7 +73,7 @@ class Blacklist
 
     public function setGracePeriod($gracePeriod)
     {
-        $this->gracePeriod = (int) $gracePeriod;
+        $this->gracePeriod = (int)$gracePeriod;
 
         return $this;
     }

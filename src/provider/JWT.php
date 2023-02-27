@@ -13,19 +13,14 @@ use think\Request;
 
 class JWT
 {
-    private $request;
 
     private $config;
 
-    public function __construct(Request $request)
+    public function __construct(private Request $request)
     {
-        $this->request = $request;
-        $config        = require __DIR__.'/../../config/config.php';
-        if (App::VERSION >= '6.0.0') {
-            $this->config = array_merge( $config,Config::get( 'jwt' ) ?? [] );
-        } else {
-            $this->config = array_merge( $config,Config::get( 'jwt.' ) ?? [] );
-        }
+        $config = require __DIR__.'/../../config/config.php';
+
+        $this->config = array_merge( $config,Config::get( 'jwt' ) ?? [] );
     }
 
     protected function registerBlacklist()

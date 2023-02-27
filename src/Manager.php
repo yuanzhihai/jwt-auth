@@ -8,21 +8,15 @@ use thans\jwt\provider\JWT\Provider;
 
 class Manager
 {
-    protected $blacklist;
-
-    protected $payload;
-
     protected $refresh;
 
     protected $validate = true;
 
     public function __construct(
-        Blacklist $blacklist,
-        Payload $payload,
+        protected  Blacklist $blacklist,
+        protected  Payload $payload,
         Provider $provider
     ) {
-        $this->blacklist = $blacklist;
-        $this->payload   = $payload;
         $this->provider  = $provider;
     }
 

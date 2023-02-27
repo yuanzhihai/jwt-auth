@@ -168,5 +168,5 @@ return [
      | Specify the provider that is used to store tokens in the blacklist.
      |
      */
-    'blacklist_storage'      => thans\jwt\provider\storage\Tp5::class,
+    'blacklist_storage'      => thans\jwt\provider\storage\Tp6::class,
 ];
