@@ -5,10 +5,12 @@ namespace thans\jwt\provider\JWT;
 use Exception;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer\Blake2b;
 use Lcobucci\JWT\Signer\Ecdsa;
 use Lcobucci\JWT\Signer\Ecdsa\Sha256 as ES256;
 use Lcobucci\JWT\Signer\Ecdsa\Sha384 as ES384;
 use Lcobucci\JWT\Signer\Ecdsa\Sha512 as ES512;
+use Lcobucci\JWT\Signer\Eddsa;
 use Lcobucci\JWT\Signer\Hmac\Sha256 as HS256;
 use Lcobucci\JWT\Signer\Hmac\Sha384 as HS384;
 use Lcobucci\JWT\Signer\Hmac\Sha512 as HS512;
@@ -27,15 +29,17 @@ use think\Collection;
 class Lcobucci extends Provider
 {
     protected $signers = [
-        'HS256' => HS256::class,
-        'HS384' => HS384::class,
-        'HS512' => HS512::class,
-        'RS256' => RS256::class,
-        'RS384' => RS384::class,
-        'RS512' => RS512::class,
-        'ES256' => ES256::class,
-        'ES384' => ES384::class,
-        'ES512' => ES512::class,
+        'HS256'   => HS256::class,
+        'HS384'   => HS384::class,
+        'HS512'   => HS512::class,
+        'BLAKE2B' => BLAKE2B::class,
+        'RS256'   => RS256::class,
+        'RS384'   => RS384::class,
+        'RS512'   => RS512::class,
+        'ES256'   => ES256::class,
+        'ES384'   => ES384::class,
+        'ES512'   => ES512::class,
+        'EDDSA'   => EdDSA::class,
     ];
 
     /** @var \Lcobucci\JWT\Signer The signer chosen based on the aglo. */

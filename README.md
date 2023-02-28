@@ -7,7 +7,7 @@
 
 1. php ^8.0
 2. thinkphp  ^6.0.0 || ^8.0.0
-3. lcobucci/jwt ^4.0 || ^5.0
+3. lcobucci/jwt ^4.2 || ^5.0
 
 ## 说明
 > 目前支持如下三大类型加密方式：RSA,HASH,DSA。再各分256、384、512位。
@@ -32,6 +32,10 @@
     > 备注：dsa 384位
 * ES512
     > 备注：dsa 512位
+* BLAKE2B
+    > 备注：Blake2b
+* EDDSA
+    > 备注：EdDSA 
 
 > 重要：RSA和DSA 都是非对称加密方式，除了修改参数ALGO外，需要配置：PUBLIC_KEY、PRIVATE_KEY两个参数，
 > 这两个参数支持文本（不要开头、结尾和换行）或密钥文件路径。如果密钥设置了密码，请配置好参数：PASSWORD
