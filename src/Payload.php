@@ -25,22 +25,9 @@ class Payload
         'sub' => Subject::class,
     ];
 
-    /**
-     * @var \think\Collection
-     */
-    protected $claims;
 
     public function __construct(protected Factory $factory)
     {
-        $this->claims = $factory->builder()->getClaims();
-    }
-
-    /**
-     * @return \think\Collection
-     */
-    public function getClaims()
-    {
-        return $this->claims;
     }
 
     public function customer(array $claim = [])
@@ -80,7 +67,7 @@ class Payload
 
     public function toArray()
     {
-        return ( new \think\Collection( $this->claims ) )->map( function ($item) {
+        return ( new \think\Collection( $this->factory->builder()->getClaims() ) )->map( function ($item) {
             return $item->getValue();
         } )->toArray();
     }
