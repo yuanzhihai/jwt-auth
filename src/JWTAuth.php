@@ -9,7 +9,7 @@ class JWTAuth extends JWT
      * Token验证，返回payload
      *
      * @param boolean $validate 是否验证黑名单
-     * @return array
+     * @return Payload
      * @throws exception\JWTException
      * @throws exception\TokenBlacklistException
      * @throws exception\TokenBlacklistGracePeriodException

@@ -40,7 +40,7 @@ class Manager
      *
      * @param  Token  $token
      *
-     * @return mixed
+     * @return Payload
      * @throws TokenBlacklistException
      */
     public function decode(Token $token)
@@ -73,12 +73,11 @@ class Manager
     public function refresh(Token $token)
     {
         $this->setRefresh();
-        $payload = $this->decode($token);
+        $payload = $this->decode($token)->get();
 
         $this->invalidate($token);
 
-        $this->payload->customer($payload)
-            ->check(true);
+        $this->payload->customer($payload)->check(true);
 
         return $this->encode($payload);
     }
