@@ -32,6 +32,7 @@ class Payload
 
     public function __construct(protected Factory $factory)
     {
+        $this->claims = $factory->builder()->getClaims();
     }
 
     /**
@@ -56,7 +57,7 @@ class Payload
 
     public function get($claim = null)
     {
-        $claim  = value( $claim );
+        $claim = value( $claim );
 
         if ($claim !== null) {
             if (is_array( $claim )) {
@@ -79,7 +80,7 @@ class Payload
 
     public function toArray()
     {
-        return ( new \think\Collection( $this->factory->builder()->getClaims() ) )->map( function ($item) {
+        return ( new \think\Collection( $this->claims ) )->map( function ($item) {
             return $item->getValue();
         } )->toArray();
     }
