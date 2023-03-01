@@ -58,9 +58,8 @@ class Manager
                 throw new TokenBlacklistException('The token is in blacklist.');
             }
         }
-        $this->payload->customer($payload)->check($this->refresh);
+        return  $this->payload->customer($payload)->check($this->refresh);
 
-        return $payload;
     }
 
     /**

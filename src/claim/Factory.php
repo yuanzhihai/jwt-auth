@@ -70,13 +70,13 @@ class Factory
                     ? $this->$key() : '' );
             }
         }
-        $this->claim = array_merge( $this->claim,$claim );
+        $this->claim = array_merge( $claim,$this->claim );
         return $this;
     }
 
     public function validate($refresh = false)
     {
-        foreach ( $this->claim as  $claim ) {
+        foreach ( $this->claim as $claim ) {
             if (!$refresh && method_exists( $claim,'validatePayload' )) {
                 $claim->validatePayload();
             }

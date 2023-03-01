@@ -41,6 +41,7 @@
 > 这两个参数支持文本（不要开头、结尾和换行）或密钥文件路径。如果密钥设置了密码，请配置好参数：PASSWORD
 
 > env文件不支持内容有等于号，遇到这种情况：
+
 >1、使用路径 2、生成没有等于号的密钥。
 ## 安装
 
@@ -80,7 +81,8 @@ JWTAuth::refresh();//刷新token，会将旧token加入黑名单
 $tokenStr = JWTAuth::token()->get(); //可以获取请求中的完整token字符串
 
 $payload = JWTAuth::auth(); //可验证token, 并获取token中的payload部分
-$uid = $payload['uid']; //可以继而获取payload里自定义的字段，比如uid
+
+$uid = $payload->get('uid'); //可以继而获取payload里自定义的字段，比如uid
 
 ```
 token刷新说明：

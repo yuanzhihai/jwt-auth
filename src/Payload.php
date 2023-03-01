@@ -11,55 +11,76 @@ use thans\jwt\claim\IssuedAt;
 use thans\jwt\claim\JwtId;
 use thans\jwt\claim\NotBefore;
 use thans\jwt\claim\Subject;
+use think\helper\Arr;
 
 class Payload
 {
     protected $classMap = [
-            'aud' => Audience::class,
-            'exp' => Expiration::class,
-            'iat' => IssuedAt::class,
-            'iss' => Issuer::class,
-            'jti' => JwtId::class,
-            'nbf' => NotBefore::class,
-            'sub' => Subject::class,
-        ];
+        'aud' => Audience::class,
+        'exp' => Expiration::class,
+        'iat' => IssuedAt::class,
+        'iss' => Issuer::class,
+        'jti' => JwtId::class,
+        'nbf' => NotBefore::class,
+        'sub' => Subject::class,
+    ];
 
+    /**
+     * @var \think\Collection
+     */
     protected $claims;
 
     public function __construct(protected Factory $factory)
     {
     }
 
+    /**
+     * @return \think\Collection
+     */
+    public function getClaims()
+    {
+        return $this->claims;
+    }
+
     public function customer(array $claim = [])
     {
-        foreach ($claim as $key => $value) {
+        foreach ( $claim as $key => $value ) {
             $this->factory->customer(
                 $key,
-                is_object($value) ? $value->getValue() : $value
+                is_object( $value ) ? $value->getValue() : $value
             );
         }
 
         return $this;
     }
 
-    public function get()
+    public function get($claim = null)
     {
-        $claim = $this->factory->builder()->getClaims();
-        
-        return $this->toPlainArray($claim);
+        $claim  = value( $claim );
+
+        if ($claim !== null) {
+            if (is_array( $claim )) {
+                return array_map( [$this,'get'],$claim );
+            }
+
+            return Arr::get( $this->toArray(),$claim );
+        }
+
+        return $this->toArray();
     }
+
 
     public function check($refresh = false)
     {
-        $this->factory->validate($refresh);
+        $this->factory->validate( $refresh );
 
         return $this;
     }
 
-    public function toPlainArray($claim)
+    public function toArray()
     {
-        return (new \think\Collection($claim))->map(function ($item) {
+        return ( new \think\Collection( $this->factory->builder()->getClaims() ) )->map( function ($item) {
             return $item->getValue();
-        })->toArray();
+        } )->toArray();
     }
 }

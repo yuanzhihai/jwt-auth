@@ -17,7 +17,7 @@ class JWTAuth extends JWT
     public function auth($validate = true)
     {
         $this->manager->setValidate( $validate );
-        return (array)$this->getPayload();
+        return $this->getPayload();
     }
 
     /**
