@@ -4,6 +4,7 @@
 namespace thans\jwt;
 
 use thans\jwt\command\SecretCommand;
+use thans\jwt\guard\Jwt;
 use thans\jwt\middleware\InjectJwt;
 
 class Service extends \think\Service
@@ -13,13 +14,15 @@ class Service extends \think\Service
         $this->commands( SecretCommand::class );
         $this->app->middleware->add( InjectJwt::class );
 
-        \yzh52521\facade\Auth::extend( 'jwt',function ($app,$name,array $config) {
-            return new JWTGuard(
-                $this->app->get( 'thans.jwt' ),
-                \yzh52521\facade\Auth::createUserProvider( $config['provider'] ),
-                $this->app->request
-            );
-        } );
+        if ($this->app->has( 'auth' )) {
+            $this->app->get( 'auth' )->extend( 'jwt',function ($app,$name,array $config) {
+                return new JWTGuard(
+                    $this->app->get( 'thans.jwt' ),
+                    $this->app->get( 'auth' )->createUserProvider( $config['provider'] ),
+                    $this->app->request
+                );
+            } );
+        }
     }
 
     public function register()
