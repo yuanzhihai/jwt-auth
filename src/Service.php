@@ -13,10 +13,10 @@ class Service extends \think\Service
         $this->commands( SecretCommand::class );
         $this->app->middleware->add( InjectJwt::class );
 
-        $this->app->get( 'auth' )->extend( 'jwt',function ($app,$name,array $config) {
+        \yzh52521\facade\Auth::extend( 'jwt',function ($app,$name,array $config) {
             return new JWTGuard(
                 $this->app->get( 'thans.jwt' ),
-                $this->app->get( 'auth' )->createUserProvider( $config['provider'] ),
+                \yzh52521\facade\Auth::createUserProvider( $config['provider'] ),
                 $this->app->request
             );
         } );
