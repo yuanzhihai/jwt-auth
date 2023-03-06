@@ -1,20 +1,18 @@
 <?php
 
-namespace thans\jwt\guard;
+namespace thans\jwt;
 
+use thans\jwt\contract\JWTSubject;
+use thans\jwt\exception\JWTException;
 use thans\jwt\exception\UserNotDefinedException;
+use think\Request;
 use yzh52521\auth\credentials\BaseCredentials;
 use yzh52521\auth\credentials\PasswordCredential;
 use yzh52521\auth\interfaces\Guard;
-use yzh52521\auth\traits\GuardHelpers;
-use think\Request;
 use yzh52521\auth\interfaces\Provider;
+use yzh52521\auth\traits\GuardHelpers;
 
-use \thans\jwt\exception\JWTException;
-
-use thans\jwt\contract\JWTSubject;
-
-class Jwt implements Guard
+class JWTGuard implements Guard
 {
     use GuardHelpers;
 
@@ -180,5 +178,4 @@ class Jwt implements Guard
 
         return $this->jwt->checkSubjectModel( $this->provider->getModel() );
     }
-
 }
