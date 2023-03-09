@@ -28,5 +28,6 @@ class Service extends \think\Service
     public function register()
     {
         $this->app->bind( 'thans.jwt',\thans\jwt\JWT::class );
+        $this->app->bind( 'thans.jwt.auth',\thans\jwt\JWTAuth::class );
     }
 }

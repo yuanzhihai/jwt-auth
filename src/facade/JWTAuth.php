@@ -21,6 +21,6 @@ class JWTAuth extends Facade
 {
     protected static function getFacadeClass()
     {
-        return 'thans.jwt';
+        return 'thans.jwt.auth';
     }
 }
