@@ -3,7 +3,9 @@
 namespace thans\jwt\provider\JWT;
 
 
-class Provider
+use thans\jwt\exception\JWTException;
+
+abstract class Provider
 {
     protected $secret;
 
@@ -13,28 +15,42 @@ class Provider
 
     public function getPublicKey()
     {
-        if (is_file($this->keys['public'])) {
+        if (is_file( $this->keys['public'] )) {
             return $this->keys['public'];
         }
 
-        return '-----BEGIN PUBLIC KEY-----'.PHP_EOL.implode(PHP_EOL, str_split($this->keys['public'], 64)).PHP_EOL
-            .'-----END PUBLIC KEY-----';
+        throw new JWTException( 'Please set public key as the path of pem file.' );
     }
 
     public function getPrivateKey()
     {
-        $header = '-----BEGIN PRIVATE KEY-----';
-        $footer = '-----END PRIVATE KEY-----';
-        if (is_file($this->keys['private'])) {
+        if (is_file( $this->keys['private'] )) {
             return $this->keys['private'];
         }
-        if ($this->keys['password'] != '') {
-            $header = '-----BEGIN ENCRYPTED PRIVATE KEY-----';
-            $footer = '-----END ENCRYPTED PRIVATE KEY-----';
-        }
+        throw new JWTException( 'Please set private key as the path of pem file.' );
+    }
 
-        return $header.PHP_EOL.implode(PHP_EOL, str_split($this->keys['private'], 64)).PHP_EOL
-            .$footer;
+    /**
+     * Set the algorithm used to sign the token.
+     *
+     * @param string $algo
+     * @return $this
+     */
+    public function setAlgo($algo)
+    {
+        $this->algo = $algo;
+
+        return $this;
+    }
+
+    /**
+     * Get the algorithm used to sign the token.
+     *
+     * @return string
+     */
+    public function getAlgo()
+    {
+        return $this->algo;
     }
 
     /**
@@ -48,6 +64,33 @@ class Provider
         return $this->keys;
     }
 
+
+    /**
+     * Set the keys used to sign the token.
+     *
+     * @param array $keys
+     * @return $this
+     */
+    public function setKeys(array $keys)
+    {
+        $this->keys = $keys;
+
+        return $this;
+    }
+
+    /**
+     * Set the secret used to sign the token.
+     *
+     * @param string $secret
+     * @return $this
+     */
+    public function setSecret($secret)
+    {
+        $this->secret = $secret;
+
+        return $this;
+    }
+
     public function getSecret()
     {
         return $this->secret;
@@ -57,4 +100,26 @@ class Provider
     {
         return $this->keys['passphrase'];
     }
+
+    /**
+     * Get the key used to sign the tokens.
+     *
+     * @return string|null
+     */
+    protected function getSigningKey()
+    {
+        return $this->isAsymmetric() ? $this->getPrivateKey() : $this->getSecret();
+    }
+
+    /**
+     * Get the key used to verify the tokens.
+     *
+     * @return string|null
+     */
+    protected function getVerificationKey()
+    {
+        return $this->isAsymmetric() ? $this->getPublicKey() : $this->getSecret();
+    }
+
+    abstract protected function isAsymmetric();
 }

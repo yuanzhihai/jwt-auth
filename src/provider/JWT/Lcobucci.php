@@ -14,6 +14,7 @@ use Lcobucci\JWT\Signer\Eddsa;
 use Lcobucci\JWT\Signer\Hmac\Sha256 as HS256;
 use Lcobucci\JWT\Signer\Hmac\Sha384 as HS384;
 use Lcobucci\JWT\Signer\Hmac\Sha512 as HS512;
+use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa;
 use Lcobucci\JWT\Signer\Rsa\Sha256 as RS256;
@@ -21,7 +22,6 @@ use Lcobucci\JWT\Signer\Rsa\Sha384 as RS384;
 use Lcobucci\JWT\Signer\Rsa\Sha512 as RS512;
 use Lcobucci\JWT\Token\RegisteredClaims;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
-use ReflectionClass;
 use thans\jwt\exception\JWTException;
 use thans\jwt\exception\TokenInvalidException;
 use think\Collection;
@@ -51,26 +51,7 @@ class Lcobucci extends Provider
     {
         $this->keys   = $keys;
         $this->signer = $this->getSigner();
-        if ($this->isAsymmetric()) {
-            $this->config = Configuration::forAsymmetricSigner( $this->signer,$this->getSigningKey(),$this->getVerificationKey() );
-        } else {
-            $this->config = Configuration::forSymmetricSigner( $this->signer,InMemory::plainText( $this->getSecret() ) );
-        }
-        if (!count( $this->config->validationConstraints() )) {
-            $this->config->setValidationConstraints(
-                new SignedWith( $this->signer,$this->getVerificationKey() ),
-            );
-        }
-    }
-
-    /**
-     * Gets the {@see $config} attribute.
-     *
-     * @return Configuration
-     */
-    public function getConfig()
-    {
-        return $this->config;
+        $this->config = $config ?: $this->buildConfig();
     }
 
     /**
@@ -92,7 +73,7 @@ class Lcobucci extends Provider
     }
 
     /**
-     * Create an instance of the builder with all of the claims applied.
+     * Create an instance of the builder with all the claims applied.
      * Adds a claim to the {@see $config}.
      * @param array $payload
      * @return \Lcobucci\JWT\Token\Builder
@@ -147,6 +128,27 @@ class Lcobucci extends Provider
     }
 
     /**
+     * @return Configuration
+     * @throws JWTException
+     */
+    protected function buildConfig(): Configuration
+    {
+        $config = $this->isAsymmetric()
+            ? Configuration::forAsymmetricSigner(
+                $this->signer,
+                $this->getSigningKey(),
+                $this->getVerificationKey()
+            )
+            : Configuration::forSymmetricSigner( $this->signer,$this->getSigningKey() );
+
+        $config->setValidationConstraints(
+            new SignedWith( $this->signer,$this->getVerificationKey() )
+        );
+
+        return $config;
+    }
+
+    /**
      * Get the signer instance.
      *
      * @return \Lcobucci\JWT\Signer
@@ -161,27 +163,56 @@ class Lcobucci extends Provider
     }
 
 
+    /**
+     * {@inheritdoc}
+     */
     protected function isAsymmetric()
     {
-        $reflect = new ReflectionClass( $this->signer );
-
-        return $reflect->isSubclassOf( Rsa::class ) || $reflect->isSubclassOf( Ecdsa::class );
+        return is_subclass_of( $this->signer,Rsa::class )
+            || is_subclass_of( $this->signer,Ecdsa::class );
     }
 
+    /**
+     * @return Key
+     * @throws JWTException
+     */
     protected function getSigningKey()
     {
-        return $this->isAsymmetric() ?
-            InMemory::plainText( $this->getPrivateKey(),$this->getPassphrase() ?? '' ) :
-            InMemory::plainText( $this->getSecret() );
+        if ($this->isAsymmetric()) {
+            if (!$privateKey = $this->getPrivateKey()) {
+                throw new JWTException( 'Private key is not set.' );
+            }
+            return $this->getKey( $privateKey,$this->getPassphrase() ?? '' );
+        }
+
+        if (!$secret = $this->getSecret()) {
+            throw new JWTException( 'Secret is not set.' );
+        }
+        return $this->getKey( $secret );
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * @return Key
+     * @throws JWTException
+     */
     protected function getVerificationKey()
     {
-        return $this->isAsymmetric() ?
-            InMemory::plainText( $this->getPublicKey() ) :
-            InMemory::plainText( $this->getSecret() );
-    }
+        if ($this->isAsymmetric()) {
+            if (!$public = $this->getPublicKey()) {
+                throw new JWTException( 'Public key is not set.' );
+            }
 
+            return $this->getKey( $public );
+        }
+
+        if (!$secret = $this->getSecret()) {
+            throw new JWTException( 'Secret is not set.' );
+        }
+
+        return $this->getKey( $secret );
+    }
 
     protected function getSign()
     {
@@ -189,5 +220,13 @@ class Lcobucci extends Provider
             throw new JWTException( 'Cloud not find '.$this->algo.' algo' );
         }
         return new $this->signers[$this->algo];
+    }
+
+    /**
+     * Get the signing key instance.
+     */
+    protected function getKey(string $contents,string $passphrase = ''): Key
+    {
+        return InMemory::plainText( $contents,$passphrase );
     }
 }
